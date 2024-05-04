@@ -12,18 +12,29 @@
     <br />
     <button id="btnCreate">New Game</button>
     <br />
+    <br />
     <input type="text" placeholder="game-id" id="textGameId">
     <button id="btnJoin">Join Game</button>
     <br />
+    <br />
+    <h3>Players: </h3>
     <div id="divPlayers"></div>
+    <br />
+    <br />
+    <h2>Start Capturing Cells!!!</h2>
+    <div id="divBoard"></div>
 
     <script>
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const textGameId = document.getElementById("textGameId");
         const divPlayers = document.getElementById("divPlayers");
+        const divBoard = document.getElementById("divBoard");
+
         let clientId = null;
         let gameId = null;
+        let playerColor = null;
+
         let ws = new WebSocket("ws://localhost:9090");
         ws.onmessage = message => {
             const response = JSON.parse(message.data);
@@ -36,19 +47,65 @@
                 console.log("Game created successfully. " + gameId);
                 textGameId.value = gameId;
             }
+            if(response.method === "update") {
+                if(!response.game.state) return;
+                for(const b of Object.keys(response.game.state)) {
+                    const color = response.game.state[b];
+                    const ballObject = document.getElementById("ball" + b);
+                    ballObject.style.background = color;
+                }
+            }
+            if(response.method === "end") {
+                for(const ball of divBoard.children) {
+                    ball.disabled = true;
+                }
+                const winner = response.winner;
+                
+                const h2 = document.createElement('h2');
+                h2.innerText = `Winner is ${winner}`;
+                h2.style.color = winner;
+                divPlayers.insertBefore(h2, divPlayers.firstChild);
+            }
             if (response.method === "join") {
                 const game = response.game;
                 console.log("Joined the game successfully." + game.id);
                 while (divPlayers.firstChild) {
                     divPlayers.removeChild(divPlayers.firstChild);
                 }
+
                 game.clients.forEach(c => {
                     const d = document.createElement("div");
                     d.style.width = "200px";
                     d.style.background = c.color;
                     d.textContent = c.clientId;
                     divPlayers.appendChild(d);
+                    
+                    if(c.clientId === clientId) playerColor = c.color;
                 });
+                while (divBoard.firstChild) {
+                    divBoard.removeChild(divBoard.firstChild);
+                }
+
+                for(let i = 0; i < game.balls; i++) {
+                    const b = document.createElement('button');
+                    b.style.width = '100px';
+                    b.style.height = '100px';
+                    b.textContent = i+1;
+                    b.id = 'ball' + (i+1);
+                    b.tag = i+1;
+                    b.addEventListener("click", e => {
+                        b.style.background = playerColor;
+                        const payload = {
+                            "method": "play",
+                            "clientId": clientId,
+                            "gameId": gameId,
+                            "ballId": b.tag,
+                            "color": playerColor,
+                        }
+                        ws.send(JSON.stringify(payload));
+                    });
+                    divBoard.appendChild(b);
+                }
             }
         }
 
