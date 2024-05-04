@@ -1,7 +1,8 @@
 const http = require('http');
 const websocketServer = require("websocket").server;
 const httpServer = http.createServer();
-httpServer.listen(10000, () => console.log("ws: Listening at 10000"));
+const PORT = process.env.PORT || 10000;
+httpServer.listen(PORT , () => console.log(`ws: Listening at ${PORT}`));
 
 const clients = {};
 const games = {};
