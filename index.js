@@ -15,7 +15,7 @@ wsServer.on("connection", connection => {
 
         if (result.method === "create") {
             const cId = result.clientId;
-            const gameId = guid();
+            const gameId = S4();
             games[gameId] = {
                 "id": gameId,
                 "balls": 20,
