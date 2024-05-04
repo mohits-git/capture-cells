@@ -1,11 +1,7 @@
-const app = require('express')();
-app.get('/', (req, res) => res.sendFile(__dirname + "/index.html"));
-app.listen(9091, () => console.log("http: listening at 9091"));
-
 const http = require('http');
 const websocketServer = require("websocket").server;
 const httpServer = http.createServer();
-httpServer.listen(9090, () => console.log("ws: Listening at 9090"));
+httpServer.listen(10000, () => console.log("ws: Listening at 10000"));
 
 const clients = {};
 const games = {};

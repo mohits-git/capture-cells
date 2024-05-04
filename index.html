@@ -35,7 +35,7 @@
         let gameId = null;
         let playerColor = null;
 
-        let ws = new WebSocket("wss://capture-cells.onrender.com:9090");
+        let ws = new WebSocket("wss://capture-cells.onrender.com");
         ws.onmessage = message => {
             const response = JSON.parse(message.data);
             if (response.method === "connect") {
