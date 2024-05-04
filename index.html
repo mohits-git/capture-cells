@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture cells</title>
+</head>
+
+<body>
+    <h1>Capture Cells</h1>
+    <br />
+    <button id="btnCreate">New Game</button>
+    <br />
+    <input type="text" placeholder="game-id" id="textGameId">
+    <button id="btnJoin">Join Game</button>
+    <br />
+    <div id="divPlayers"></div>
+
+    <script>
+        const btnCreate = document.getElementById("btnCreate");
+        const btnJoin = document.getElementById("btnJoin");
+        const textGameId = document.getElementById("textGameId");
+        const divPlayers = document.getElementById("divPlayers");
+        let clientId = null;
+        let gameId = null;
+        let ws = new WebSocket("ws://localhost:9090");
+        ws.onmessage = message => {
+            const response = JSON.parse(message.data);
+            if (response.method === "connect") {
+                clientId = response.clientId;
+                console.log("Client id set successfully. " + clientId);
+            }
+            if (response.method === "create") {
+                gameId = response.game.id;
+                console.log("Game created successfully. " + gameId);
+                textGameId.value = gameId;
+            }
+            if (response.method === "join") {
+                const game = response.game;
+                console.log("Joined the game successfully." + game.id);
+                while (divPlayers.firstChild) {
+                    divPlayers.removeChild(divPlayers.firstChild);
+                }
+                game.clients.forEach(c => {
+                    const d = document.createElement("div");
+                    d.style.width = "200px";
+                    d.style.background = c.color;
+                    d.textContent = c.clientId;
+                    divPlayers.appendChild(d);
+                });
+            }
+        }
+
+        btnCreate.addEventListener("click", e => {
+            const payload = {
+                "method": "create",
+                "clientId": clientId
+            };
+            ws.send(JSON.stringify(payload));
+        });
+
+        textGameId.addEventListener("change", e => {
+            gameId = e.target.value;
+        });
+
+        btnJoin.addEventListener("click", e => {
+            if (gameId === null)
+                gameId = textGameId.value
+            const payload = {
+                "method": "join",
+                "clientId": clientId,
+                "gameId": gameId
+            };
+            ws.send(JSON.stringify(payload));
+        });
+
+    </script>
+</body>
+
+</html>
