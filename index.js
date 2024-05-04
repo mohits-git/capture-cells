@@ -1,22 +1,17 @@
-const http = require('http');
-const websocketServer = require("websocket").server;
-const httpServer = http.createServer();
+const WebSocket = require('ws');
+
 const PORT = process.env.PORT || 10000;
-httpServer.listen(PORT , () => console.log(`ws: Listening at ${PORT}`));
 
 const clients = {};
 const games = {};
 
-const wsServer = new websocketServer({
-    "httpServer": httpServer,
-});
+const wsServer = new WebSocket.Server({ port: PORT });
 
-wsServer.on("request", request => {
-    const connection = request.accept(null, request.origin);
+wsServer.on("connection", connection => {
     connection.on("open", () => console.log("Open!!"));
     connection.on("close", () => console.log("Closed!!"));
     connection.on("message", message => {
-        const result = JSON.parse(message.utf8Data);
+        const result = JSON.parse(message);
 
         if (result.method === "create") {
             const cId = result.clientId;
